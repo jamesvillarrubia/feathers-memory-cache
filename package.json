@@ -1,0 +1,59 @@
+{
+  "name": "feathers-memory-cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "add-dist": "npm run clean && npm run build && git add dist/ --force && git commit -am \"Updating dist\"",
+    "build": "npm run clean && npm run webpack && npm run webpack:production",
+    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
+    "clean": "shx rm -rf dist/ && shx mkdir -p dist",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --opts mocha.opts",
+    "dtslint": "dtslint types",
+    "lint": "semistandard --fix",
+    "dev": " nodemon --exec \"npm run mocha\"",
+    "mocha": "mocha --opts mocha.opts",
+    "publish": "git push origin --tags && npm run changelog && git push origin",
+    "release:major": "npm run add-dist && npm version major && npm publish",
+    "release:minor": "npm run add-dist && npm version minor && npm publish",
+    "release:patch": "npm run add-dist && npm version patch && npm publish",
+    "test": "npm run dtslint && npm run lint && npm run coverage",
+    "webpack": "webpack",
+    "webpack:production": "NODE_ENV=production webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lru-cache": "^6.0.0",
+    "querystring": "^0.2.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
+    "@feathersjs/adapter-tests": "^4.3.4",
+    "@feathersjs/express": "^4.3.5",
+    "@feathersjs/feathers": "^4.3.4",
+    "@feathersjs/socketio": "^4.3.5",
+    "@types/node": "^12.7.11",
+    "babel-loader": "^8.0.6",
+    "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "dtslint": "^0.9.8",
+    "feathers-memory": "^4.1.0",
+    "istanbul": "^1.1.0-alpha.1",
+    "mocha": "^6.2.1",
+    "semistandard": "^14.2.0",
+    "shx": "^0.3.2",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack": "^4.41.0",
+    "webpack-cli": "^3.3.9",
+    "webpack-merge": "^4.2.2"
+  },
+  "engines": {
+    "node": ">= 8"
+  },
+  "directories": {
+    "lib": "lib"
+  }
+}

@@ -3,30 +3,24 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const LRU = require('lru-cache');
 
-const { after:afterHook } = require('../lib/hooks');
-const { getKey } = require('../lib/utils');
+const { after:afterHook } = require('../../lib/hooks');
+const setup = require('../../lib/setup')
+const express = require('@feathersjs/express');
 
 const assert = chai.assert;
 chai.use(chaiAsPromised);
 
 describe('hook::after', () => {
-  let scopes;
+  let scopes = {};
   let ctx;
   let first;
   let second;
   let third;
   let fourth;
+  const app = express();
   beforeEach(() => {
-    scopes = {
-      cache_local: new LRU(),
-      cache_Global: new LRU()
-    };
     ctx = {
-      app: {
-        get: (scope) => {
-          return scopes[scope];
-        }
-      },
+      app,
       path: 'books',
       params: {
         query: {
@@ -56,9 +50,9 @@ describe('hook::after', () => {
   });
 
   it('return value', async () => {
-    const cache = scopes.cache_local;
+    const { cache, customHash, buildKey } = app.get('cache_local')
     const common = { ...ctx, method: 'get', result: { data: ['yes'] } };
-    const key = getKey(common);
+    const key = buildKey(common, customHash);
     const { result } = await afterHook({ scope: 'local' })(common);
     const cached = JSON.parse(cache.get(key));
     assert.deepEqual(cached, result);

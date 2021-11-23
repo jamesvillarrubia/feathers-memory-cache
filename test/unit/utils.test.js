@@ -7,8 +7,8 @@ const feathers = require('@feathersjs/feathers');
 const LRU = require('lru-cache');
 
 // const { cacheBefore, cacheAfter, cache  } = require('../lib/index')
-const { before, after, setup } = require('../lib/hooks');
-const { getKey, hashCode, purge, purgePath, purgeId } = require('../lib/utils');
+const { before, after, setup } = require('../../lib/hooks');
+const { getKey, hashCode, purge, purgePath, purgeId } = require('../../lib/utils');
 
 const assert = chai.assert;
 chai.use(chaiAsPromised);
@@ -92,10 +92,13 @@ describe('getKey', () => {
 
   it('uses auth when available', async () => {
     const first = getKey({ ...ctx });
-    const second = getKey({ ...ctx, params:{...ctx.params, user:undefined }});
+    const second = getKey({ ...ctx, params:{...ctx.params, authenticated:true, user:{
+      id:1234,
+      name:'etc'
+    }}});
     const third = getKey({ ...ctx, params:{...ctx.params, authenticated:false }});
     assert.notStrictEqual(first, second);
-    assert.strictEqual(second, third);
+    assert.notStrictEqual(first, third);
   });
 
   it('uses path as prefix', async () => {

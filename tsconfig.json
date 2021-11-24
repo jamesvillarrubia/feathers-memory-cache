@@ -1,0 +1,8 @@
+{
+    "files": [],
+    "references": [
+        {"path": "./src"},
+        {"path": "./test"}
+    ],
+    // "exclude" :["./node_modules"]
+}

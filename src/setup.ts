@@ -1,10 +1,10 @@
 
-const LRU = require('lru-cache');
-const { purge, purgeScope, getKey, hashCode } = require('./utils');
+import { getKey } from './utils';
+import { Application } from '@feathersjs/feathers';
+import LRUCache from 'lru-cache';
 
 
-
-const setup = (options = {}) => (app) => {
+export const setup = (options:any = {}) => (app:Application) => {
   options = {
     max: 500,
     maxAge: 1000 * 60 * 5,
@@ -22,7 +22,7 @@ const setup = (options = {}) => (app) => {
   // console.log('typeof',typeof options.customHash)
   // console.log('customHash', customHash())
 
-  let cache = new LRU(options);
+  let cache = new LRUCache(options);
   app.set(scope, {
     cache,
     customHash,
@@ -35,5 +35,3 @@ const setup = (options = {}) => (app) => {
     buildKey
   }
 };
-
-module.exports = setup;

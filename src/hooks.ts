@@ -13,16 +13,25 @@ cacheBefore({
 });
 /******/ 
 
-const setup = require('./setup');
-const { purgeId } = require('./utils');
+import { setup } from './setup'
+import { purgeId, CustomHash, CustomKey } from './utils';
+import { HookContext } from '@feathersjs/feathers';
 
+
+export interface Options {
+  scope?: string;
+  customHash?: CustomHash;
+  key?: CustomKey;
+  [x:string]:any;
+}
 
 // eslint-disable-next-line no-unused-vars
-const before = (options = {}) => async (ctx) => {
-  options = {
+export const before = (options?:Options) => async (ctx:HookContext) => {
+  options={
     scope: 'Global',
     ...options
   };
+
 
   // allow for skipping
   if (ctx.params.$skipCacheHook == true) {
@@ -72,7 +81,7 @@ const before = (options = {}) => async (ctx) => {
 
 
 
-const after = (options = {}) => async (ctx) => {
+export const after = (options?:Options) => async (ctx:HookContext) => {
   options = {
     scope: 'Global',
     ...options
@@ -99,9 +108,4 @@ const after = (options = {}) => async (ctx) => {
   }
 
   return ctx;
-};
-
-module.exports = {
-  before,
-  after
 };

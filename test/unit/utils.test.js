@@ -6,9 +6,9 @@ const express = require('@feathersjs/express');
 const feathers = require('@feathersjs/feathers');
 const LRU = require('lru-cache');
 
-// const { cacheBefore, cacheAfter, cache  } = require('../lib/index')
-const { before, after, setup } = require('../../lib/hooks');
-const { getKey, hashCode, purge, purgePath, purgeId } = require('../../lib/utils');
+// const { cacheBefore, cacheAfter, cache  } = require('../src/index')
+const { before, after, setup } = require('../../src/hooks');
+const { getKey, hashCode, purge, purgePath, purgeId } = require('../../src/utils');
 
 const assert = chai.assert;
 chai.use(chaiAsPromised);

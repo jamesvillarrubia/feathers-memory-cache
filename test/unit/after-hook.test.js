@@ -3,8 +3,8 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const LRU = require('lru-cache');
 
-const { after:afterHook } = require('../../lib/hooks');
-const setup = require('../../lib/setup')
+const { after:afterHook } = require('../../src/hooks');
+const setup = require('../../src/setup')
 const express = require('@feathersjs/express');
 
 const assert = chai.assert;

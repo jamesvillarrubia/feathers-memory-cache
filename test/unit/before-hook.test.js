@@ -5,8 +5,8 @@ const chaiAsPromised = require('chai-as-promised');
 const express = require('express');
 
 
-const { before:beforeHook } = require('../../lib/hooks');
-const setup = require('../../lib/setup')
+const { before:beforeHook } = require('../../src/hooks');
+const setup = require('../../src/setup')
 
 const assert = chai.assert;
 chai.use(chaiAsPromised);

@@ -1,23 +1,30 @@
-const chai = require('chai');
+import { assert }from 'chai'
+// const chai = require('chai')
+// import chaiAsPromised from 'chai-as-promised'
+// const chaiAsPromised = require('chai-as-promised')
+import { memory } from '@feathersjs/memory'
+import express from '@feathersjs/express'
+import { feathers } from '@feathersjs/feathers';
+import { NotAuthenticated, BadRequest } from '@feathersjs/errors'
+import { HookContext } from '@feathersjs/feathers';
 
-const chaiAsPromised = require('chai-as-promised');
-const memory = require('feathers-memory');
-const express = require('@feathersjs/express');
-const feathers = require('@feathersjs/feathers');
-const { NotAuthenticated, BadRequest } =require('@feathersjs/errors')
+const { cacheBefore, cacheAfter } = require('../../src/index')
 
-const { cacheBefore, cacheAfter, cacheSetup  } = require('../../lib/index')
-
-const assert = chai.assert;
-chai.use(chaiAsPromised);
 const app = express(feathers());
-app.configure(express.rest());
+// app.configure(express.rest());
 
 // TODO - setup test
+interface User {
+  username?:String;
+  password?:String;
+  id?:any
+  [x:string]:any;
+}
+
 
 describe('service', () => {
-  let user1;
-  let user2;
+  let user1:User;
+  let user2:User;
   before(async ()=>{
     app.set('cache_Global', undefined)
     app.set('authentication', {
@@ -34,12 +41,12 @@ describe('service', () => {
       before: {
         all: [
           cacheBefore(),
-          (ctx)=>{if(ctx.params.user && ctx.params.user.id === 4){throw new NotAuthenticated()}},
+          (ctx:HookContext)=>{if(ctx.params.user && ctx.params.user.id === 4){throw new NotAuthenticated()}},
         ]
       },
       after: {
         all: [
-          (ctx)=>{if(ctx.params.user && ctx.params.user.id === 5){throw new BadRequest()}},
+          (ctx:HookContext)=>{if(ctx.params.user && ctx.params.user.id === 5){throw new BadRequest()}},
           cacheAfter()
         ]
       }
@@ -87,11 +94,11 @@ describe('service', () => {
   });
 
   it('invalidates cache after update', async () => {    
-    let result1 = await app.service('users').get(user2.id);
+    let result1:User = await app.service('users').get(user2.id);
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1) // cache at one
-    let result2 = await app.service('users').update(user2.id,{...user2,new:true});
+    let result2:User = await app.service('users').update(user2.id,{...user2,new:true});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 0) // cache back to zero
-    let result3 = await app.service('users').get(user2.id);
+    await app.service('users').get(user2.id);
     assert.isUndefined(result1.new); // no modified yet
     assert.isOk(result2.new); // modification went through
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1) // cache back to one
@@ -99,26 +106,26 @@ describe('service', () => {
   });
 
   it('denies cache with different auth', async () => {
-    let result1 = await app.service('users').find({query:{id:user2.id}});
+    await app.service('users').find({query:{id:user2.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1); // cache at one
-    let result2 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
+    await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 2);
-    let result3 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCDE'}, user:{id:user2.id}});
+    await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCDE'}, user:{id:user2.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 3);
-    let result4 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user1.id}});
+    await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user1.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 4);
   })
   it('allows cache with same auth', async () => {
-    let result1 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
+    await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1); // cache at one
-    let result2 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
+    await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:user2.id}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1);
   })
 
   it('disallows cache of error with unauthed', async () => {
     try {
-      let result1 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:4}});
-    }catch(e){
+      await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:4}});
+    }catch(e:any){
       assert.strictEqual(e.className, 'not-authenticated')
     }
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 0); // cache at one
@@ -126,8 +133,8 @@ describe('service', () => {
 
   it('disallows cache of after hook error', async () => {
     try {
-      let result1 = await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:5}});
-    }catch(e){
+      await app.service('users').find({query:{id:user2.id}, authenticated:true, authentication:{strategy:'jwt', accessToken:'ABCD'}, user:{id:5}});
+    }catch(e:any){
       assert.strictEqual(e.className, 'bad-request')
     }
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 0); // cache at one
@@ -135,18 +142,18 @@ describe('service', () => {
 
 
   it('allows caching of different pages', async () => {
-    let result1 = await app.service('users').find({query:{$limit:1,$skip:0}});
+    await app.service('users').find({query:{$limit:1,$skip:0}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1); // cache at one
-    let result2 = await app.service('users').find({query:{$limit:1,$skip:0}});
+    await app.service('users').find({query:{$limit:1,$skip:0}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1); // cache at one
-    let result3 = await app.service('users').find({query:{$limit:1,$skip:2}});
+    await app.service('users').find({query:{$limit:1,$skip:2}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 2); // cache at one
   });
 
   it('allows same caching of default limit vs enforced', async () => {
-    let result1 = await app.service('users').find();
+    await app.service('users').find();
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 1); // cache at one
-    let result2 = await app.service('users').find({query:{$skip:1}});
+    await app.service('users').find({query:{$skip:1}});
     assert.strictEqual(app.get('cache_Global').cache.itemCount, 2); // cache at one
   });
 
@@ -163,7 +170,7 @@ describe('service', () => {
         all: [
           cacheBefore({
             scope:"birds",
-            key:(ctx)=>{ return ctx.method}
+            key:(ctx:HookContext)=>{ return ctx.method}
           }),
         ]
       },
@@ -175,9 +182,9 @@ describe('service', () => {
     });
     await app.setup()
     await app.service('birds').create({})
-    let result1 = await app.service('birds').find();
+    await app.service('birds').find();
     assert.strictEqual(app.get('cache_birds').cache.itemCount, 1); // cache at one
-    let result2 = await app.service('birds').find({query:{id:1}});
+    await app.service('birds').find({query:{id:1}});
     assert.strictEqual(app.get('cache_birds').cache.itemCount, 1); // cache at one
 
   })
@@ -194,8 +201,8 @@ describe('service', () => {
         all: [
           cacheBefore({
             scope:"gators",
-            customHash:(ctx)=>{ 
-              return Math.round(Math.random()*1000)
+            customHash:()=>{ 
+              return `${Math.round(Math.random()*1000)}`
             }
           }),
         ]
@@ -208,9 +215,9 @@ describe('service', () => {
     });
     await app.setup()
     await app.service('gators').create({})
-    let result1 = await app.service('gators').find();
+    await app.service('gators').find();
     assert.strictEqual(app.get('cache_gators').cache.itemCount, 1); // cache at one    
-    let result2 = await app.service('gators').find();
+    await app.service('gators').find();
     assert.strictEqual(app.get('cache_gators').cache.itemCount, 2); // cache at one
   })
 });

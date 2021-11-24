@@ -1,8 +1,8 @@
 {
   "name": "feathers-memory-cache",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.0.1",
+  "description": "Hooks for adding an in-memory, scopable LRU-cache in FeathersJS services",
+  "main": "lib/",
   "scripts": {
     "add-dist": "npm run clean && npm run build && git add dist/ --force && git commit -am \"Updating dist\"",
     "build": "npm run clean && npm run webpack && npm run webpack:production",
@@ -25,11 +25,37 @@
     "webpack": "webpack",
     "webpack:production": "NODE_ENV=production webpack"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "James Villarrubia",
+    "email": "james.villarrubia@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesvillarrubia/feathers-memory-cache.git"
+  },  
+  "keywords": [
+    "feathers",
+    "feathersjs",
+    "hook",
+    "hooks",
+    "service",
+    "cache",
+    "lru"
+  ],
+  "bugs": {
+    "url": "https://github.com/jamesvillarrubia/feathers-memory-cache/issues"
+  },
+  "homepage": "https://github.com/jamesvillarrubia/feathers-memory-cache#readme",
+  "license": "MIT",
   "dependencies": {
     "lru-cache": "^6.0.0",
-    "querystring": "^0.2.1"
+    "querystring": "^0.2.1",
+    "debug": "^4.3.2"
+  },
+  "semistandard": {
+    "env": [
+      "mocha"
+    ]
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
@@ -55,7 +81,7 @@
     "webpack-merge": "^4.2.2"
   },
   "engines": {
-    "node": ">= 8"
+    "node": ">= 12"
   },
   "directories": {
     "lib": "lib"

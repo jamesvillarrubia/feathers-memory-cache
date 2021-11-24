@@ -12,11 +12,7 @@
     "dtslint": "dtslint types",
     "lint": "semistandard --fix",
     "dev": " nodemon --exec \"npm run mocha\"",
-    "mocha_utils": "mocha 'test/utils.test.js' --timeout 1000000",
-    "mocha_before": "mocha 'test/before-hook.test.js' --timeout 1000000",
-    "mocha_": "mocha 'test/integration/service.test.js' --timeout 1000000",
-    "mocha": "mocha --opts mocha.opts",
-    "mochaend":" //--opts mocha.opts",
+    "mocha": "mocha --recursive test/",
     "publish": "git push origin --tags && npm run changelog && git push origin",
     "release:major": "npm run add-dist && npm version major && npm publish",
     "release:minor": "npm run add-dist && npm version minor && npm publish",
@@ -29,6 +25,7 @@
     "name": "James Villarrubia",
     "email": "james.villarrubia@gmail.com"
   },
+  "contributors": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jamesvillarrubia/feathers-memory-cache.git"
@@ -81,9 +78,21 @@
     "webpack-merge": "^4.2.2"
   },
   "engines": {
-    "node": ">= 12"
+    "node": ">= 10"
   },
   "directories": {
     "lib": "lib"
+  },
+  "release": {
+    "branches": [
+      "release"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git"
+    ]
   }
 }

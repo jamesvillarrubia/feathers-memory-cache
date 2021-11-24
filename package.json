@@ -1,6 +1,6 @@
 {
   "name": "feathers-memory-cache",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Hooks for adding an in-memory, scopable LRU-cache in FeathersJS services",
   "main": "lib/",
   "scripts": {
@@ -29,7 +29,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jamesvillarrubia/feathers-memory-cache.git"
-  },  
+  },
   "keywords": [
     "feathers",
     "feathersjs",

@@ -16,7 +16,7 @@
     "semantic-release:level":   "npx --no-install semantic-release --no-ci --dry-run | egrep 'complete: (minor|major|patch)' | egrep -o '(minor|major|patch)' > .NEXT_VERSION_LEVEL",
     "semantic-release:version": "npx --no-install semantic-release --no-ci --dry-run | egrep 'next release version is ([0-9]+\\.[0-9]+\\.[0-9]+)' | egrep -o '([0-9]+\\.[0-9]+\\.[0-9]+)' > .NEXT_VERSION",
     "semantic-release:next": "npm run semantic-release:level && npm run semantic-release:version",
-    "mypublish": "npm run semantic-release:next; VERSION=$(cat .NEXT_VERSION_LEVEL); np $VERSION --preview --no-yarn"
+    "mypublish": "npm run semantic-release:next && VERSION=$(cat .NEXT_VERSION_LEVEL) && np $VERSION --preview --no-yarn"
   },
   "author": {
     "name": "James Villarrubia",
@@ -90,9 +90,12 @@
   "directories": {
     "lib": "lib"
   },
+  "np":{
+    "contents":"lib"
+  },
   "release": {
     "branches": [
-      "release"
+      "main"
     ],
     "plugins": [
       "@semantic-release/commit-analyzer"

@@ -1,2 +1,4 @@
 node_modules
 **/tsconfig.tsbuildinfo
+.nyc_output
+trash

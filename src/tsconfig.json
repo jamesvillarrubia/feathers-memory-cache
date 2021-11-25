@@ -3,6 +3,7 @@
     "compilerOptions": {
         "rootDir":"./",
         "esModuleInterop":true,
+        "baseUrl": "./"
     },
     "include": ["**/*.ts"],
     "exclude" :["../node_modules"]

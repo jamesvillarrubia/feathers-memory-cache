@@ -4,7 +4,9 @@
         "module": "commonjs",
         "rootDir":"../",
         "noEmit": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "baseUrl": "./"
+
     },
     "include": ["**/*.test.ts"],
     "exclude" :["../node_modules"]

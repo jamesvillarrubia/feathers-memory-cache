@@ -17,7 +17,6 @@ import { setup } from './setup'
 import { purgeId, CustomHash, CustomKey } from './utils';
 import { HookContext } from '@feathersjs/feathers';
 
-
 export interface Options {
   scope?: string;
   customHash?: CustomHash;

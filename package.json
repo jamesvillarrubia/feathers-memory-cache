@@ -5,7 +5,6 @@
   "main": "lib/",
   "types": "lib/",
   "scripts": {
-    "prepublish": "node_modules/.bin/pap",
     "compile": "shx rm -rf lib/ && tsc -b",
     "compile:dev": "shx rm -rf lib/ && tsc -b --watch",
     "test": "npm run compile && npm run coverage",

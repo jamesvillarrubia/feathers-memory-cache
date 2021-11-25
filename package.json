@@ -1,6 +1,6 @@
 {
   "name": "feathers-memory-cache",
-  "version": "0.0.0-development",
+  "version": "0.1.0",
   "description": "Hooks for adding an in-memory, scopable LRU-cache in FeathersJS services",
   "main": "lib/",
   "types": "lib/",
@@ -8,11 +8,15 @@
     "prepublish": "npm run compile",
     "compile": "shx rm -rf lib/ && tsc -b",
     "compile:dev": "shx rm -rf lib/ && tsc -b --watch",
-    "compile:test": "npm run compile && npm run coverage",
-    "coverage": "nyc npm run test",
-    "test": "mocha -r ts-node/register -r tsconfig-paths/register --recursive --config .mocharc.json test/**/*.ts",
-    "test:dev": "npm run test -- --watch --watch-files src/**/*.ts,test/**/*.ts test/**/*.test.ts",
-    "semantic-release": "semantic-release"
+    "test": "npm run compile && npm run coverage",
+    "test:dev": "npm run mocha -- --watch --watch-files src/**/*.ts,test/**/*.ts test/**/*.test.ts",
+    "coverage": "nyc npm run mocha",
+    "mocha": "mocha -r ts-node/register -r tsconfig-paths/register --recursive --config .mocharc.json test/**/*.ts",
+    "semantic-release": "semantic-release",
+    "semantic-release:level":   "npx --no-install semantic-release --no-ci --dry-run | egrep 'complete: (minor|major|patch)' | egrep -o '(minor|major|patch)' > .NEXT_VERSION_LEVEL",
+    "semantic-release:version": "npx --no-install semantic-release --no-ci --dry-run | egrep 'next release version is ([0-9]+\\.[0-9]+\\.[0-9]+)' | egrep -o '([0-9]+\\.[0-9]+\\.[0-9]+)' > .NEXT_VERSION",
+    "semantic-release:next": "npm run semantic-release:level && npm run semantic-release:version",
+    "mypublish": "VERSION=$(cat .NEXT_VERSION_LEVEL); np $VERSION --preview --no-yarn"
   },
   "author": {
     "name": "James Villarrubia",
@@ -91,12 +95,7 @@
       "release"
     ],
     "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      "@semantic-release/git",
-      "@semantic-release/github"
+      "@semantic-release/commit-analyzer"
     ]
   }
 }

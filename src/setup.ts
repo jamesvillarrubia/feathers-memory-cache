@@ -5,12 +5,14 @@ import LRUCache from 'lru-cache';
 
 
 export const setup = (options:any = {}) => (app:Application) => {
+
   options = {
     max: 500,
     maxAge: 1000 * 60 * 5,
     ...options,
     ...app.get('cache') // get default settings
   };
+
   const customHash = typeof options.customHash === 'function' ? options.customHash : ()=>''
   const buildKey = typeof options.key === 'function' ? options.key : getKey
 

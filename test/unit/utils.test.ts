@@ -1,18 +1,10 @@
-const chai = require('chai');
+import { assert }from 'chai'
+import { BaseHookContext } from '@feathersjs/hooks/lib';
 
-const chaiAsPromised = require('chai-as-promised');
-const memory = require('feathers-memory');
-const express = require('@feathersjs/express');
-const feathers = require('@feathersjs/feathers');
-const LRU = require('lru-cache');
+import LRUCache from 'lru-cache';
 
 // const { cacheBefore, cacheAfter, cache  } = require('../src/index')
-const { before, after, setup } = require('../../src/hooks');
-const { getKey, hashCode, purge, purgePath, purgeId } = require('../../src/utils');
-
-const assert = chai.assert;
-chai.use(chaiAsPromised);
-const app = express(feathers());
+const { getKey, hashCode, purge, purgePath, purgeFind, purgeId } = require('../../src/utils');
 
 // set max
 
@@ -43,7 +35,8 @@ describe('hashCode', () => {
 });
 
 describe('getKey', () => {
-  const ctx = {
+  let ctx = new BaseHookContext
+  ctx = {
     params: {
       query: {
         $limit: 1,
@@ -62,13 +55,13 @@ describe('getKey', () => {
     path: 'books',
     id: 15,
     app:{
-      get:(field)=>{
-        let o = { authentication: { entity: 'user' }};
+      get:(field:string)=>{
+        let o:any = { authentication: { entity: 'user' }};
         return o[field] 
       }
     },
-    
-  };
+    ...ctx
+  }
 
 
   it('respects pagination setting', async () => {
@@ -136,16 +129,16 @@ describe('getKey', () => {
 });
 
 describe('purge', () => {
-  let scopes;
-  let ctx;
+  let scopes:any;
+  let ctx = new BaseHookContext;
   beforeEach(() => {
     scopes = {
-      cache_Global: { cache: new LRU() },
-      cache_local: { cache: new LRU() },
+      cache_Global: { cache: new LRUCache() },
+      cache_local: { cache: new LRUCache() },
     };
     ctx = {
       app: {
-        get: (scope) => {
+        get: (scope:string) => {
           return scopes[scope];
         }
       }
@@ -155,8 +148,9 @@ describe('purge', () => {
   });
 
   it('purges only the scoped cache', async () => {
-    purge('local')(ctx);
     assert.ok(scopes.cache_Global.cache.get('key'));
+    assert.ok(scopes.cache_local.cache.get('key'));
+    purge('local')(ctx);
     assert.isUndefined(scopes.cache_local.cache.get('key'));
   });
 
@@ -168,18 +162,18 @@ describe('purge', () => {
 });
 
 describe('purgePath', () => {
-  let scopes;
-  let ctx;
-  let first;
-  let second;
-  let third;
+  let scopes:any;
+  let ctx = new BaseHookContext
+  let first:string;
+  let second:string;
+  let third:string;
   beforeEach(() => {
     scopes = {
-      cache_local: { cache: new LRU() },
+      cache_local: { cache: new LRUCache() },
     };
     ctx = {
       app: {
-        get: (scope) => {
+        get: (scope:string) => {
           return scopes[scope];
         }
       },
@@ -212,19 +206,19 @@ describe('purgePath', () => {
 });
 
 describe('purgeId', () => {
-  let scopes;
-  let ctx;
-  let first;
-  let second;
-  let third;
-  let fourth;
+  let scopes:any;
+  let ctx = new BaseHookContext
+  let first:string;
+  let second:string;
+  let third:string;
+  let fourth:string;
   beforeEach(() => {
     scopes = {
-      cache_local: { cache: new LRU() },
+      cache_local: { cache: new LRUCache() },
     };
     ctx = {
       app: {
-        get: (scope) => {
+        get: (scope:string) => {
           return scopes[scope];
         }
       },
@@ -257,172 +251,51 @@ describe('purgeId', () => {
   });
 });
 
-// before(async () => {
-//   app.configure(cache());
-//   console.log('cache',app.get('cacheRef'));
-//   appTest.use('users', memory({
-//     paginate: {
-//       default: 10,
-//       max: 50
-//     }
-//   }));
-//   appTest.service('users').hooks({
-//     before: {
-//       all: [
-//         cacheBefore()
-//       ]
-//     },
-//     after: {
-//       all:[
-//         cacheAfter()
-//       ]
-//     }
-//   });
-//   user = await appTest.service('users').create({
-//     username: 'David',
-//     password: 'password'
-//   });
-//   appTest.setup();
-// });
 
-// describe('cache', () => {
-//   it('returns same value when requesting twice empty', async () => {
-//     let query = {
-//       username:'steve',
-//       $limit:10
-//     };
-//     let result = await appTest.service('users').find({query});
-//     let result2 = await appTest.service('users').find({query});
-//     assert.strictEqual(result2.fromCache, true);
-//     assert.strictEqual(result.data, result2.data);
-//   });
-//   it('returns same value when requesting twice', async () => {
-//     let query = {
-//       username:'David',
-//       $limit:10
-//     };
-//     let result = await appTest.service('users').find({query});
-//     let result2 = await appTest.service('users').find({query});
-//     assert.strictEqual(result2.fromCache, true);
-//     assert.strictEqual(result.data, result2.data);
-//   });
-//   it('invalidates cache after update', async () => {
-//     let query = {
-//       username:'David',
-//       $limit:10
-//     };
-//     let result = await appTest.service('users').update(user.id,{...user,new:true});
-//     let result2 = await appTest.service('users').find({query});
-//     console.log(result);
-//     console.log(result2);
-//   //   assert.strictEqual(result2.fromCache, true);
-//   //   assert.strictEqual(result.data, result2.data);
-//   });
+describe('purgeFind', () => {
+  let scopes:any;
+  let ctx = new BaseHookContext
+  let first:string;
+  let second:string;
+  let third:string;
+  let fourth:string;
+  beforeEach(() => {
+    scopes = {
+      cache_local: { cache: new LRUCache() },
+    };
+    ctx = {
+      app: {
+        get: (scope:string) => {
+          return scopes[scope];
+        }
+      },
+      path: 'books',
+      params: {
+        query: {
+          $limit: 1,
+          z: 'z'
+        }
+      }
+    };
+    first = getKey({ ...ctx,  params: { ...ctx.params, query: undefined } });
+    second = getKey({ ...ctx, path:'buckets', params: { ...ctx.params, query: { id:1 }} });
+    third = getKey({ ...ctx });
+    fourth = getKey({ ...ctx, id:15 });
 
-//   // it('denies cache with different auth', async () => {})
-//   // it('allows cache with same auth', async () => {})
+    let cache = scopes.cache_local.cache
+    cache.set(first, 'value');
+    cache.set(second, 'value');
+    cache.set(third, 'value');
+    cache.set(fourth, 'value');
 
-//   it('uses different cache with different context', async () => {})
-//   it('uses different context when set', async () => {})
-//   it('uses different key with ID', async () => {})
-//   it('uses different key without ID', async () => {})
-//   it('uses different key with ID and query', async () => {})
-//   it('uses different key without ID and query', async () => {})
-//   it('uses global context when setup', async () => {})
+  });
 
-//     it('fails for protected service and external call when not strategy', async () => {
-//       try {
-//         await appTest.service('protected').get('test', {
-//           provider: 'rest',
-//           authentication: {
-//             username: 'David',
-//             password: 'password'
-//           }
-//         });
-//         assert.fail('Should never get here');
-//       } catch (error) {
-//         assert.strictEqual(error.name, 'NotAuthenticated');
-//         assert.strictEqual(error.message, 'Invalid authentication information (no `strategy` set)');
-//       }
-//     });
-
-//     it('fails when entity service was not found', async () => {
-//       delete app.services.users;
-
-//       await assert.isRejected(appTest.service('protected').get('test', {
-//         provider: 'rest',
-//         authentication: {
-//           strategy: 'basic',
-//           accessToken: userToken
-//         }
-//       }), {
-//         message: 'Can not find service \'users\''
-//       });
-//     });
-
-//     it('fails when accessToken is not set', async () => {
-//       try {
-//         await appTest.service('protected').get('test', {
-//           provider: 'rest',
-//           authentication: {
-//             strategy: 'basic'
-//           }
-//         });
-//         assert.fail('Should never get here');
-//       } catch (error) {
-//         assert.strictEqual(error.name, 'NotAuthenticated');
-//         assert.strictEqual(error.message, 'No access token');
-//       }
-//     });
-
-//     it('passes when authentication is set and merges params', async () => {
-//       const params = {
-//         provider: 'rest',
-//         authentication: {
-//           strategy: 'basic',
-//           accessToken: userToken
-//         }
-//       };
-
-//       const result = await appTest.service('protected').get('test', params);
-
-//       assert.strictEqual(Object.keys(result.params).length, 4);
-//       assert.ok(!result.params.accessToken, 'Did not merge accessToken');
-//       assert.deepStrictEqual(result, {
-//         id: 'test',
-//         params: merge({}, params, {
-//           user,
-//           authentication: {
-//             strategy: 'basic',
-//             accessToken: userToken
-//           },
-//           authenticated: true
-//         })
-//       });
-//     });
-//   });
-
-//   describe('parse', () => {
-//     const res = {};
-
-//     it('returns null when header not set', async () => {
-//       const req = {};
-
-//       const result = await appTest.service('authentication').parse(req, res, 'basic');
-
-//       assert.strictEqual(result, null);
-//     });
-
-//     it('return null when scheme does not match', async () => {
-//       const req = {
-//         headers: {
-//           authorization: ' jwt something'
-//         }
-//       };
-
-//       const result = await appTest.service('authentication').parse(req, res, 'basic');
-
-//       assert.strictEqual(result, null);
-//     });
-// });
-// });
+  it('purges only the finds', async () => {
+    const cache = scopes.cache_local.cache;
+    purgeFind('local')({ ...ctx });
+    assert.ok(cache.get(second));
+    assert.ok(cache.get(fourth));
+    assert.isUndefined(cache.get(first));
+    assert.isUndefined(cache.get(third));
+  });
+});

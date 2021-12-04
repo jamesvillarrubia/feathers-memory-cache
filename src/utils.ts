@@ -64,7 +64,7 @@ export function getKey (ctx:  HookContext, customHash:Function ) {
 
 }
 
-// This iterates through ALL of the keys and deletes any with a matching path AND id `{path}{id}`
+// This iterates through ALL of the keys and deletes any with a matching path AND id `{path}_{id}_`
 export const purgeId = (scope = 'Global') => (ctx:HookContext) => {
   const { cache } = ctx.app.get(`cache_${scope}`)
 
@@ -79,23 +79,34 @@ export const purgeId = (scope = 'Global') => (ctx:HookContext) => {
   }
 };
 
-// // This iterates through ALL of the keys and deletes any with a matching path and any ID `{path}`
-// export const purgePath = (scope = 'Global') => (ctx) => {
-//   const { cache } = ctx.app.get(`cache_${scope}`)
+// This iterates through ALL of the keys and deletes any with a matching path AND No ID `{path}__`
+export const purgeFind = (scope = 'Global') => (ctx:HookContext) => {
+  const { cache } = ctx.app.get(`cache_${scope}`)
+    let pathHash = hashCode(`${ctx.path}`);
+    cache.forEach((_value:any, key:String, cache:any ) => {
+      if (key.indexOf(`${pathHash}__`) === 0) {
+        cache.del(key);
+      }
+    });
+};
 
 
-//   if (ctx.path) {
-//     pathHash = hashCode(ctx.path);
-//     cache.forEach((value, key, cache) => {
-//       if (key.indexOf(`${pathHash}_`) === 0) {
-//         cache.del(key);
-//       }
-//     });
-//   }
-// };
+// This iterates through ALL of the keys and deletes any with a matching path (no id and id) `{path}_`
+export const purgePath = (scope = 'Global') => (ctx:HookContext) => {
+  const { cache } = ctx.app.get(`cache_${scope}`)
 
-// // Cleans out the entire cache by scope
-// export const purge = (scope = 'Global') => (ctx) => {
-//   const { cache, customHash } = ctx.app.get(`cache_${scope}`)
-//   cache.reset();
-// };
+  if (ctx.path) {
+    let pathHash = hashCode(ctx.path);
+    cache.forEach((_value:any, key:String, cache:any ) => {
+      if (key.indexOf(`${pathHash}_`) === 0) {
+        cache.del(key);
+      }
+    });
+  }
+};
+
+// Cleans out the entire cache by scope
+export const purge = (scope = 'Global') => (ctx) => {
+  const { cache, customHash } = ctx.app.get(`cache_${scope}`)
+  cache.reset();
+};

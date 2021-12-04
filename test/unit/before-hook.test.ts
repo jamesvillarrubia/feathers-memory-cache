@@ -1,24 +1,19 @@
+import express from '@feathersjs/express'
+import { assert }from 'chai'
+import { HookContext } from '@feathersjs/hooks/lib';
 
-const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
-// const express = require('@feathersjs/express');
-const express = require('express');
+const { cacheBefore } = require('../../src/index')
+const { setup } = require('../../src/setup')
 
-
-const { before:beforeHook } = require('../../src/hooks');
-const setup = require('../../src/setup')
-
-const assert = chai.assert;
-chai.use(chaiAsPromised);
 
 describe('hook::before', () => {
-  let scopes;
-  let ctx;
+  let ctx:HookContext;
+  const app = express();
+
   let first;
   let second;
   let third;
   let fourth;
-  const app = express();
   beforeEach(() => {
     setup({scope:'limit', max:1})(app)
     setup({scope:'fast', maxAge:1})(app)
@@ -26,6 +21,7 @@ describe('hook::before', () => {
     setup({scope:'local'})(app)
     setup({})(app)
     ctx = {
+      arguments:null,
       app,
       path: 'books',
       params: {
@@ -46,6 +42,12 @@ describe('hook::before', () => {
     cache.set(fourth, 'value');
   });
 
+  it('create cache with setup', async () => {
+    await cacheBefore({ scope: 'notcachelocal' })(ctx);
+    assert.property(ctx.app.get('cache_notcachelocal'),'cache')
+  });
+
+
   it('use id for GET', async () => {
     const { cache, buildKey } = app.get('cache_local')
     const noIdKey = buildKey({ ...ctx, method: 'find' });
@@ -53,8 +55,8 @@ describe('hook::before', () => {
     cache.set(noIdKey, JSON.stringify({ data: 'noId' }));
     cache.set(yesIdKey, JSON.stringify({ data: 'yesId' }));
 
-    const { result: yesIdResult } = await beforeHook({ scope: 'local' })({ ...ctx, id: 1, method: 'get' });
-    const { result: noIdResult } = await beforeHook({ scope: 'local' })({ ...ctx, method: 'find' });
+    const { result: yesIdResult } = await cacheBefore({ scope: 'local' })({ ...ctx, id: 1, method: 'get' });
+    const { result: noIdResult } = await cacheBefore({ scope: 'local' })({ ...ctx, method: 'find' });
 
     assert.strictEqual(yesIdResult.data, 'yesId');
     assert.strictEqual(noIdResult.data, 'noId');
@@ -64,13 +66,13 @@ describe('hook::before', () => {
     const { cache, buildKey } = app.get('cache_local')
     const noIdKey = buildKey({ ...ctx, method: 'get' });
     cache.set(noIdKey, JSON.stringify({ data: 'noId' }));
-    const { result: noIdResult, params } = await beforeHook({ scope: 'local' })({ ...ctx, method: 'find' });
+    const { result: noIdResult, params } = await cacheBefore({ scope: 'local' })({ ...ctx, method: 'find' });
     assert.strictEqual(noIdResult.data, 'noId');
     assert.ok(params.fromCache);
   });
 
   it('respects $skipCacheHook', async () => {
-    const { result } = await beforeHook({ scope: 'local' })({ ...ctx, params: { ...ctx.params, $skipCacheHook: true } });
+    const { result } = await cacheBefore({ scope: 'local' })({ ...ctx, params: { ...ctx.params, $skipCacheHook: true } });
     assert.isUndefined(result);
   });
 
@@ -80,7 +82,7 @@ describe('hook::before', () => {
     cache.set(getK, JSON.stringify({ data: 'get' }));
     const findK = buildKey({ ...ctx, method: 'find' });
     cache.set(findK, JSON.stringify({ data: 'find' }));
-    const { result } = await beforeHook({ scope: 'local' })({ ...ctx, id: 1, method: 'patch' });
+    const { result } = await cacheBefore({ scope: 'local' })({ ...ctx, id: 1, method: 'patch' });
     assert.isUndefined(result);
     assert.isUndefined(cache.get(getK));
     assert.ok(cache.get(findK));
@@ -93,8 +95,8 @@ describe('hook::before', () => {
     cache.set(first, JSON.stringify({ data: 'noId' }));
     cache.set(second, JSON.stringify({ data: 'yesId' }));
 
-    const { result: firstResult } = await beforeHook({ scope: 'limit' })({ ...ctx, id: 1, method: 'get' });
-    const { result: secondResult } = await beforeHook({ scope: 'limit' })({ ...ctx, id: 2, method: 'get' });
+    const { result: firstResult } = await cacheBefore({ scope: 'limit' })({ ...ctx, id: 1, method: 'get' });
+    const { result: secondResult } = await cacheBefore({ scope: 'limit' })({ ...ctx, id: 2, method: 'get' });
     
     assert.strictEqual(firstResult.data, 'yesId');
     assert.isUndefined(secondResult);
@@ -109,8 +111,8 @@ describe('hook::before', () => {
     slow.cache.set(slowKey, JSON.stringify({ data: 'slow' }));
 
     await new Promise(resolve => setTimeout(resolve, 10));
-    const { result: fastResult } = await beforeHook({ scope: 'fast' })({ ...ctx, id: 1, method: 'get' });
-    const { result: slowResult } = await beforeHook({ scope: 'slow' })({ ...ctx, id: 2, method: 'get' });
+    const { result: fastResult } = await cacheBefore({ scope: 'fast' })({ ...ctx, id: 1, method: 'get' });
+    const { result: slowResult } = await cacheBefore({ scope: 'slow' })({ ...ctx, id: 2, method: 'get' });
     assert.strictEqual(slowResult.data, 'slow');
     assert.isUndefined(fastResult);
   });

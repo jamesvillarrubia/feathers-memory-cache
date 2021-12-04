@@ -19,6 +19,7 @@ describe('hook::before', () => {
     setup({scope:'fast', maxAge:1})(app)
     setup({scope:'slow', maxAge:100000})(app)
     setup({scope:'local'})(app)
+    setup({scope:'mutate', purgeOnMutate:['get','find']})(app)
     setup({})(app)
     ctx = {
       arguments:null,
@@ -87,6 +88,24 @@ describe('hook::before', () => {
     assert.isUndefined(cache.get(getK));
     assert.ok(cache.get(findK));
   });
+
+  it('respects purgeOnMutate option', async () => {
+    const { cache, buildKey } = app.get('cache_mutate')
+
+    const getK = buildKey({ ...ctx, id: 1, method: 'get' });
+    cache.set(getK, JSON.stringify({ data: 'get' }));
+
+    const findK = buildKey({ ...ctx, method: 'find' });
+    cache.set(findK, JSON.stringify({ data: 'find' }));
+
+    assert.isOk(cache.get(getK));
+    assert.isOk(cache.get(findK));
+    const { result } = await cacheBefore({ scope: 'mutate', purgeOnMutate:['get','find'] })({ ...ctx, id: 1, method: 'patch' });
+    assert.isUndefined(result);
+    assert.isUndefined(cache.get(getK));
+    assert.isUndefined(cache.get(findK));
+  });
+
 
   it('respects max size', async () => {
     const { cache, buildKey } = app.get('cache_limit')

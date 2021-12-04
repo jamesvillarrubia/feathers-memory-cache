@@ -6,13 +6,11 @@ export interface CustomHash {
 }
 
 export interface CustomKey {
-  (ctx:HookContext): string;
+  (ctx:HookContext, customHash?:CustomHash): string;
 }
 
-
-
 // Collisions are possible with this code but not likely
-export function hashCode (s:String) {
+export function hashCode (s:string): string {
   let h;
   for (let i = 0; i < s.length; i++) {
     h = Math.imul(31, h) + s.charCodeAt(i) | 0;
@@ -23,7 +21,7 @@ export function hashCode (s:String) {
 
 // This function returns repeatable key based on the contents of the ctx.
 // Keys should be idempotent 
-export function getKey (ctx:  HookContext, customHash:Function ) {
+export const getKey:CustomKey = (ctx:  HookContext, customHash:Function ) => {
   ctx.params = ctx.params || {};
   const q = ctx.params.query || {};
   const p = ctx.params.paginate === false ? 'disabled' : 'enabled';
@@ -71,7 +69,7 @@ export const purgeId = (scope = 'Global') => (ctx:HookContext) => {
   if (ctx.id) {
     let pathHash = hashCode(`${ctx.path}`);
     let idHash = hashCode(`/${ctx.id}`);
-    cache.forEach((_value:any, key:String, cache:any ) => {
+    cache.forEach((_value:any, key:string, cache:any ) => {
       if (key.indexOf(`${pathHash}_${idHash}_`) === 0) {
         cache.del(key);
       }
@@ -83,7 +81,7 @@ export const purgeId = (scope = 'Global') => (ctx:HookContext) => {
 export const purgeFind = (scope = 'Global') => (ctx:HookContext) => {
   const { cache } = ctx.app.get(`cache_${scope}`)
     let pathHash = hashCode(`${ctx.path}`);
-    cache.forEach((_value:any, key:String, cache:any ) => {
+    cache.forEach((_value:any, key:string, cache:any ) => {
       if (key.indexOf(`${pathHash}__`) === 0) {
         cache.del(key);
       }
@@ -106,7 +104,7 @@ export const purgePath = (scope = 'Global') => (ctx:HookContext) => {
 };
 
 // Cleans out the entire cache by scope
-export const purge = (scope = 'Global') => (ctx) => {
-  const { cache, customHash } = ctx.app.get(`cache_${scope}`)
+export const purge = (scope = 'Global') => (ctx:HookContext) => {
+  const { cache } = ctx.app.get(`cache_${scope}`)
   cache.reset();
 };

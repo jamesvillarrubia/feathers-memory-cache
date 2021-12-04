@@ -17,49 +17,22 @@ cacheBefore({
 //TODO: Add Allowed Methods testin
 //
 
-import { setup } from './setup'
-import { purgeId, purgeFind, CustomHash, CustomKey } from './utils';
+import { setup, Options, setDefaultOptions, Methods } from './setup'
+import { purgeId, purgeFind } from './utils';
 import { HookContext } from '@feathersjs/feathers';
-
-
-
-export interface Options {
-  scope?: string;
-  customHash?: CustomHash;
-  key?: CustomKey;
-  [x:string]:any;
-  allowedMethods?:string[];
-  purgeOnMutate?:string[];
-}
-
-
-export const setDefaultOptions = (options:Options):Options => {
-  return {
-    scope: 'Global',
-    allowedMethods:['get','find'],
-    purgeOnMutate:['get'],
-    customHash:undefined,
-    key: undefined,
-    ...options
-  };
-}
-
 
 // eslint-disable-next-line no-unused-vars
 export const before = (options?:Options) => async (ctx:HookContext) => {
   
   options = setDefaultOptions(options)
+  const { buildKey, cache, customHash } =  setup(options)(ctx.app)
 
   // allow for skipping
   if ((ctx.params||{}).$skipCacheHook == true) {
     return ctx;
   }    
   
-  
   // if cache doesn't exist yet, create it
-  // console.log('before', options)
-  const { buildKey, cache, customHash } =  setup(options)(ctx.app)
-
   // If its a get, do the lookup and return unnested value
   // possible values:
   // FIND
@@ -72,13 +45,13 @@ export const before = (options?:Options) => async (ctx:HookContext) => {
 
   if (ctx.method === 'get' || ctx.method === 'find') {
     const newKey = buildKey(ctx, customHash);
-    // console.log('before::new key', newKey)
     let raw = cache.get(newKey)
     
     // if undefined, return
     if(!raw){return ctx}
 
-    const stored = JSON.parse(raw);
+
+    const stored = JSON.parse(raw as string);
     if (stored) {
       ctx.params.fromCache = true;
       ctx.result = stored;
@@ -87,13 +60,13 @@ export const before = (options?:Options) => async (ctx:HookContext) => {
   }
 
   // If its a update, patch... reset key
-  // PATCH / UPDATE / DELETE
-  //    /books/1
+  // (PATCH / UPDATE / DELETE)  /books/1
   // For a PATCH/UPDATE, we should invalidate any matching id based call (which means a loop)
   if (ctx.method === 'patch' || ctx.method === 'update' || ctx.method === 'remove') {
     if (options.purgeOnMutate.includes('get')){
       purgeId(options.scope)(ctx)
     }
+    // if enabled, we can also purge all cached searches(FIND) for that scope.  
     if (options.purgeOnMutate.includes('find')){
       purgeFind(options.scope)(ctx)
     }
@@ -101,7 +74,6 @@ export const before = (options?:Options) => async (ctx:HookContext) => {
   }
   return ctx;
 };
-
 
 
 export const after = (options?:Options) => async (ctx:HookContext) => {
@@ -113,27 +85,19 @@ export const after = (options?:Options) => async (ctx:HookContext) => {
     return ctx;
   }
 
-  // if cache doesn't exist yet, create it
-  const { buildKey, cache, customHash } =  setup(options)(ctx.app)
   if (!(ctx.params||{}).fromCache){
     if (
       // if there is a result
       ctx.result 
       // its using one of the cacheable methods
-      && (ctx.method === 'get' || ctx.method === 'find') 
-      // and the cacheable method is allowed
-      && (
-        options.allowedMethods.includes(ctx.method) 
-        // or if not allowed, the method list is empty
-        || typeof options.allowedMethods === 'undefined'
-        || options.allowedMethods.length === 0
-      )
+      && options.allowedMethods.includes(ctx.method as Methods)
     ) {
+      // if cache doesn't exist yet, create it
+      const { buildKey, cache, customHash } =  setup(options)(ctx.app)
       const newKey = buildKey(ctx, customHash);
       cache.set(newKey, JSON.stringify(ctx.result));
       ctx.params.cached = true;
     }
-
   // if from cache, don't reset it
   }else if(ctx.method === 'find'){
     ctx.result.fromCache = true

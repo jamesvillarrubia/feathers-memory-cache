@@ -59,6 +59,13 @@ export const before = (options?:Options) => async (ctx:HookContext) => {
 
   }
 
+  // purgeOnMutate(ctx, options)
+
+  return ctx;
+};
+
+
+function purgeOnMutate(ctx:HookContext, options:Options){
   // If its a update, patch... reset key
   // (PATCH / UPDATE / DELETE)  /books/1
   // For a PATCH/UPDATE, we should invalidate any matching id based call (which means a loop)
@@ -70,10 +77,9 @@ export const before = (options?:Options) => async (ctx:HookContext) => {
     if (options.purgeOnMutate.includes('find')){
       purgeFind(options.scope)(ctx)
     }
-
   }
-  return ctx;
-};
+}
+
 
 
 export const after = (options?:Options) => async (ctx:HookContext) => {
@@ -102,5 +108,9 @@ export const after = (options?:Options) => async (ctx:HookContext) => {
   }else if(ctx.method === 'find'){
     ctx.result.fromCache = true
   }
+
+  // just in case, repurge
+  purgeOnMutate(ctx, options)
+
   return ctx;
 };

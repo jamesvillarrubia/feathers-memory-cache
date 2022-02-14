@@ -220,4 +220,44 @@ describe('service', () => {
     await app.service('gators').find();
     assert.strictEqual(app.get('cache_gators').cache.itemCount, 2); // cache at one
   })
+
+
+  it('allows a middle hook that adds back a purged element', async () => {
+    await app.use('/mockingbirds', memory({
+      paginate: {
+        default: 1,
+        max: 2,
+      }
+    }));
+    app.service('mockingbirds').hooks({
+      before: {
+        all: [
+          cacheBefore({
+            scope:"mockingbirds",
+          }),
+        ],
+        patch:[
+          (ctx)=>ctx.app.service('mockingbirds').get(ctx.id)
+        ]
+      },
+      after: {
+        all: [
+          cacheAfter({scope:"mockingbirds"})
+        ]
+      }
+    });
+    await app.setup()
+    let mock = await app.service('mockingbirds').create({})
+    await app.service('mockingbirds').find();
+    await app.service('mockingbirds').patch(mock.id,{});
+
+
+    assert.ok(false)
+    assert.strictEqual(app.get('cache_birds').cache.itemCount, 1); // cache at one
+    await app.service('birds').find({query:{id:1}});
+    assert.strictEqual(app.get('cache_birds').cache.itemCount, 1); // cache at one
+
+  })
+
+
 });

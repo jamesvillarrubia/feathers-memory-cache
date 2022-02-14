@@ -1,6 +1,6 @@
 # Introduction
 
-This module creates a cache is shared within the feathers instance as a global state.  For multi-instance, multi-container caching, use feathers-redis-cache instead.  With this cache, scaling your app to 4 containers will produce 4 independent caches.
+This module creates a cache is shared within the feathers instance as a global state.  For multi-instance, multi-container caching, use feathers-redis-cache instead.  With this cache, scaling your app to 4 containers will produce 4 independent caches.  That means PUT/PATCH/DELETE requests will only purge the cache for one instance.
 
 By default, the cache's scope is global but can be setup on a per-service basis or even more granular.
 
